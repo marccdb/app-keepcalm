@@ -1,0 +1,8 @@
+/home/marcio/Documentos/dev/app-keepcalm/src/backend/KeepCalm/obj/Release/net10.0/KeepCalm.csproj.AssemblyReference.cache
+/home/marcio/Documentos/dev/app-keepcalm/src/backend/KeepCalm/obj/Release/net10.0/rpswa.dswa.cache.json
+/home/marcio/Documentos/dev/app-keepcalm/src/backend/KeepCalm/obj/Release/net10.0/KeepCalm.GeneratedMSBuildEditorConfig.editorconfig
+/home/marcio/Documentos/dev/app-keepcalm/src/backend/KeepCalm/obj/Release/net10.0/KeepCalm.AssemblyInfoInputs.cache
+/home/marcio/Documentos/dev/app-keepcalm/src/backend/KeepCalm/obj/Release/net10.0/KeepCalm.AssemblyInfo.cs
+/home/marcio/Documentos/dev/app-keepcalm/src/backend/KeepCalm/obj/Release/net10.0/KeepCalm.csproj.CoreCompileInputs.cache
+/home/marcio/Documentos/dev/app-keepcalm/src/backend/KeepCalm/obj/Release/net10.0/KeepCalm.MvcApplicationPartsAssemblyInfo.cs
+/home/marcio/Documentos/dev/app-keepcalm/src/backend/KeepCalm/obj/Release/net10.0/KeepCalm.MvcApplicationPartsAssemblyInfo.cache

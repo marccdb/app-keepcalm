@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:8.0
+    container_name: keepcalm-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: changeme
+    networks:
+      - keepcalm
+
+  backend:
+    build:
+      context: ./src/backend/KeepCalm
+      dockerfile: Dockerfile
+    container_name: keepcalm-backend
+    restart: unless-stopped
+    ports:
+      - '5000:8080'
+    environment:
+      MongoDb__Uri: mongodb://admin:changeme@mongo:27017/keepcalm?authSource=admin
+      MongoDb__DatabaseName: keepcalm
+  
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      - mongo
+    networks:
+      - keepcalm
+    volumes:
+      - backend-logs:/app/logs
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000
+    container_name: keepcalm-frontend
+    restart: unless-stopped
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+    networks:
+      - keepcalm
+
+volumes:
+  mongo-data:
+  backend-logs:
+
+networks:
+  keepcalm:
+    driver: bridge

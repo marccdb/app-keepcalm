@@ -1,0 +1,19 @@
+# Backend
+src/backend/KeepCalm/obj/
+src/backend/KeepCalm/bin/
+
+# Frontend
+src/frontend/node_modules/
+src/frontend/dist/
+src/frontend/.svelte-kit/
+
+# General
+.git/
+.gitignore
+*.suo
+*.user
+*.orig
+.env
+.env.*
+opencode/
+plan/
