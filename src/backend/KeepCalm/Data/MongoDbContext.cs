@@ -9,9 +9,9 @@ namespace KeepCalm.Data
     {
         public MongoDbContext(DbContextOptions<MongoDbContext> options) : base(options) { }
 
-        public DbSet<TaskItem> Tasks => Set<TaskItem>();
-        public DbSet<MicroStep> MicroSteps => Set<MicroStep>();
-        public DbSet<FocusSession> FocusSessions => Set<FocusSession>();
+        public virtual DbSet<TaskItem> Tasks => Set<TaskItem>();
+        public virtual DbSet<MicroStep> MicroSteps => Set<MicroStep>();
+        public virtual DbSet<FocusSession> FocusSessions => Set<FocusSession>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

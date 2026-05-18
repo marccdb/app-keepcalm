@@ -1,18 +1,19 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import PriorityBadge from '$lib/components/PriorityBadge.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import { Modal } from '$lib/components/index.js';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import { API_URL } from '$lib/api';
+	import { API_URL, microStepsApi, type BackendMicroStep } from '$lib/api';
 
-	let { id }: { id: string } = $props();
+	let id = $derived($page.params.id);
 
 	interface TaskItem {
 		id: string;
 		title: string;
 		description: string;
-		priority: 'low' | 'medium' | 'high' | 'urgent';
+		priority: 'urgent' | 'important' | 'normal' | 'low';
 		progress: number;
 		completed: boolean;
 		createdAt: string;
@@ -29,44 +30,87 @@
 	let loading = $state(true);
 	let showStepModal = $state(false);
 	let newStep = $state({ description: '' });
+	let error = $state<string | null>(null);
 
 	onMount(async () => {
 		try {
 			const res = await fetch(`${API_URL}/api/tasks/${id}`);
-			if (res.ok) {
+			if (!res.ok) {
+				task = null;
+			} else {
 				task = await res.json();
+				await loadMicroSteps();
 			}
-		} catch {
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Erro ao carregar tarefa';
 			task = null;
 		} finally {
 			loading = false;
 		}
 	});
 
-	function handleAddStep() {
-		if (!newStep.description.trim() || !task) return;
-
-		const step: MicroStep = {
-			id: crypto.randomUUID(),
-			description: newStep.description,
-			completed: false
-		};
-
-		if (task) {
-			task = { ...task, microSteps: [...task.microSteps, step] };
+	async function loadMicroSteps() {
+		try {
+			const backendSteps = await microStepsApi.list(id);
+			if (task) {
+				task = {
+					...task,
+					microSteps: backendSteps.map((ms: BackendMicroStep) => ({
+						id: ms.id,
+						description: ms.title,
+						completed: ms.isCompleted
+					}))
+				};
+			}
+		} catch (e) {
+			console.error('Failed to load micro-steps:', e);
 		}
-		newStep = { description: '' };
-		showStepModal = false;
 	}
 
-	function toggleStep(stepId: string) {
+	async function handleAddStep() {
+		if (!newStep.description.trim() || !task) return;
+
+		try {
+			const backendStep = await microStepsApi.create(id, {
+				title: newStep.description,
+				description: newStep.description
+			});
+
+			task = {
+				...task,
+				microSteps: [...task.microSteps, {
+					id: backendStep.id,
+					description: backendStep.title,
+					completed: backendStep.isCompleted
+				}]
+			};
+			newStep = { description: '' };
+			showStepModal = false;
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Erro ao adicionar micro-passo';
+		}
+	}
+
+	async function toggleStep(stepId: string) {
 		if (!task) return;
-		task = {
-			...task,
-			microSteps: task.microSteps.map((s) =>
-				s.id === stepId ? { ...s, completed: !s.completed } : s
-			)
-		};
+
+		const step = task.microSteps.find((s) => s.id === stepId);
+		if (!step) return;
+
+		try {
+			await microStepsApi.update(stepId, {
+				isCompleted: !step.completed
+			});
+
+			task = {
+				...task,
+				microSteps: task.microSteps.map((s) =>
+					s.id === stepId ? { ...s, completed: !s.completed } : s
+				)
+			};
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Erro ao atualizar micro-passo';
+		}
 	}
 
 	function getProgress(): number {
@@ -91,6 +135,14 @@
 		<div class="calm-empty">
 			<div class="calm-empty-icon calm-pulse">⏳</div>
 			<p class="calm-empty-text">Carregando tarefa...</p>
+		</div>
+	</div>
+{:else if error}
+	<div class="calm-container calm-section">
+		<div class="calm-empty calm-fade-in">
+			<div class="calm-empty-icon">⚠️</div>
+			<p class="calm-empty-text">{error}</p>
+			<p class="calm-empty-hint"><a href="/">Voltar ao Dashboard</a></p>
 		</div>
 	</div>
 {:else if !task}
@@ -191,10 +243,11 @@
 	<Modal open={showStepModal} title="Novo Micro-passo" onClose={() => (showStepModal = false)}>
 		<form onsubmit={(e) => { e.preventDefault(); handleAddStep(); }}>
 			<div style="margin-bottom: 1.5rem;">
-				<label style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
+				<label for="step-description" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
 					Descricao do passo *
 				</label>
 				<input
+					id="step-description"
 					type="text"
 					bind:value={newStep.description}
 					placeholder="Ex: Abrir o arquivo X..."

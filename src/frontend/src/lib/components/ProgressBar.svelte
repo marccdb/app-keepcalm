@@ -26,7 +26,7 @@
 	<div
 		class={barClass}
 		style="width: {percentage}%; height: 100%;"
-	/>
+	></div>
 </div>
 
 {#if showLabel}

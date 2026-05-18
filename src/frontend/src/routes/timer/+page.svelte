@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import { focusSessionsApi } from '$lib/api';
 
 	let running = $state(false);
 	let paused = $state(false);
@@ -8,34 +9,91 @@
 	let totalTime = $state(25 * 60);
 	let sessions = $state(0);
 	let intervalId = 0;
+	let sessionId = $state<string | null>(null);
+	let error = $state<string | null>(null);
 
 	const presets = [
-		{ label: 'Foco', minutes: 25 },
-		{ label: 'Curta pausa', minutes: 5 },
-		{ label: 'Longa pausa', minutes: 15 }
+		{ label: 'Foco', minutes: 25, type: 'focus' },
+		{ label: 'Curta pausa', minutes: 5, type: 'break' },
+		{ label: 'Longa pausa', minutes: 15, type: 'break' }
 	];
 
 	let selectedPreset = $state(presets[0]);
 
-	function startTimer() {
-		running = true;
-		paused = false;
-		timeLeft = selectedPreset.minutes * 60;
-		totalTime = selectedPreset.minutes * 60;
-		intervalId = window.setInterval(tick, 1000);
+	async function loadSessionCount() {
+		try {
+			const history = await focusSessionsApi.getHistory(30);
+			sessions = history.filter(s => s.status === 'completed').length;
+		} catch {
+			// silently fail, keep current count
+		}
 	}
 
-	function pauseTimer() {
+	async function startTimer() {
+		try {
+			const backendSession = await focusSessionsApi.start({
+				durationMinutes: selectedPreset.minutes,
+				type: selectedPreset.type
+			});
+
+			sessionId = backendSession.id;
+			running = true;
+			paused = false;
+			timeLeft = selectedPreset.minutes * 60;
+			totalTime = selectedPreset.minutes * 60;
+			intervalId = window.setInterval(tick, 1000);
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Erro ao iniciar timer';
+		}
+	}
+
+	async function pauseTimer() {
+		if (sessionId) {
+			try {
+				await focusSessionsApi.pause(sessionId);
+			} catch (e) {
+				console.error('Failed to pause session:', e);
+			}
+		}
 		paused = true;
 		window.clearInterval(intervalId);
 	}
 
-	function resumeTimer() {
+	async function resumeTimer() {
+		if (sessionId) {
+			try {
+				await focusSessionsApi.resume(sessionId);
+			} catch (e) {
+				console.error('Failed to resume session:', e);
+			}
+		}
 		paused = false;
 		intervalId = window.setInterval(tick, 1000);
 	}
 
+	async function completeTimer() {
+		window.clearInterval(intervalId);
+		running = false;
+		paused = false;
+
+		if (sessionId) {
+			try {
+				await focusSessionsApi.complete(sessionId);
+				sessions++;
+			} catch (e) {
+				console.error('Failed to complete session:', e);
+			}
+		}
+
+		sessionId = null;
+		timeLeft = selectedPreset.minutes * 60;
+		totalTime = selectedPreset.minutes * 60;
+	}
+
 	function resetTimer() {
+		if (sessionId) {
+			sessionId = null;
+		}
 		running = false;
 		paused = false;
 		window.clearInterval(intervalId);
@@ -47,9 +105,7 @@
 		if (timeLeft > 0) {
 			timeLeft--;
 		} else {
-			pauseTimer();
-			running = false;
-			sessions++;
+			completeTimer();
 		}
 	}
 
@@ -67,6 +123,10 @@
 		const s = seconds % 60;
 		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 	}
+
+	onMount(() => {
+		loadSessionCount();
+	});
 
 	onDestroy(() => {
 		window.clearInterval(intervalId);
@@ -91,6 +151,14 @@
 		</div>
 	</div>
 </div>
+
+{#if error}
+	<div class="calm-container" style="margin-top: 1rem;">
+		<div style="background: var(--calm-error-bg); color: var(--calm-error); padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem;">
+			{error}
+		</div>
+	</div>
+{/if}
 
 <div class="calm-container calm-section" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 120px);">
 	<!-- Title -->
@@ -174,7 +242,7 @@
 				<div
 					class="calm-progress-bar calm-progress-bar-primary"
 					style="width: {((totalTime - timeLeft) / totalTime) * 100}%; height: 100%; transition: width 0.5s ease;"
-				/>
+				></div>
 			</div>
 			<small style="color: var(--calm-text-muted); font-size: 0.75rem;">
 				{Math.round(((totalTime - timeLeft) / totalTime) * 100)}% completo

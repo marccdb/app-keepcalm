@@ -63,10 +63,11 @@
 
 		<div style="display: flex; flex-direction: column; gap: 1rem;">
 			<div>
-				<label style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
+				<label for="timer-minutes" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
 					Sessao de foco (minutos)
 				</label>
 				<input
+					id="timer-minutes"
 					type="number"
 					bind:value={timerMinutes}
 					min={1}
@@ -76,10 +77,11 @@
 			</div>
 
 			<div>
-				<label style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
+				<label for="short-break-minutes" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
 					Pausa curta (minutos)
 				</label>
 				<input
+					id="short-break-minutes"
 					type="number"
 					bind:value={shortBreakMinutes}
 					min={1}
@@ -89,10 +91,11 @@
 			</div>
 
 			<div>
-				<label style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
+				<label for="long-break-minutes" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
 					Pausa longa (minutos)
 				</label>
 				<input
+					id="long-break-minutes"
 					type="number"
 					bind:value={longBreakMinutes}
 					min={1}
@@ -102,10 +105,11 @@
 			</div>
 
 			<div>
-				<label style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
+				<label for="sessions-before-long-break" style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--calm-text); margin-bottom: 0.35rem;">
 					Sessoes antes da pausa longa
 				</label>
 				<input
+					id="sessions-before-long-break"
 					type="number"
 					bind:value={sessionsBeforeLongBreak}
 					min={1}
@@ -128,15 +132,18 @@
 			</div>
 			<div style="display: flex; align-items: center; justify-content: space-between;">
 				<span style="font-size: 0.9rem; color: var(--calm-text);">Mostrar animacoes de respiracao</span>
-				<input type="checkbox" checked style="width: 1.1rem; height: 1.1rem; accent-color: var(--calm-primary);" />
+				<input id="breathing-anim" type="checkbox" checked style="width: 1.1rem; height: 1.1rem; accent-color: var(--calm-primary);" />
+				<label for="breathing-anim" style="display: none;">Breathing animations</label>
 			</div>
 			<div style="display: flex; align-items: center; justify-content: space-between;">
 				<span style="font-size: 0.9rem; color: var(--calm-text);">Som de notificacao</span>
-				<input type="checkbox" checked style="width: 1.1rem; height: 1.1rem; accent-color: var(--calm-primary);" />
+				<input id="notification-sound" type="checkbox" checked style="width: 1.1rem; height: 1.1rem; accent-color: var(--calm-primary);" />
+				<label for="notification-sound" style="display: none;">Notification sound</label>
 			</div>
 			<div style="display: flex; align-items: center; justify-content: space-between;">
 				<span style="font-size: 0.9rem; color: var(--calm-text);">Notificacoes do navegador</span>
-				<input type="checkbox" style="width: 1.1rem; height: 1.1rem; accent-color: var(--calm-primary);" />
+				<input id="browser-notifications" type="checkbox" style="width: 1.1rem; height: 1.1rem; accent-color: var(--calm-primary);" />
+				<label for="browser-notifications" style="display: none;">Browser notifications</label>
 			</div>
 		</div>
 	</div>

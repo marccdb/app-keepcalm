@@ -1,5 +1,4 @@
 using KeepCalm.DTOs;
-using KeepCalm.Models.Entities;
 
 namespace KeepCalm.Services
 {
@@ -11,8 +10,5 @@ namespace KeepCalm.Services
         Task<TaskDto> UpdateTaskAsync(Guid id, UpdateTaskDto dto, CancellationToken ct = default);
         Task<bool> DeleteTaskAsync(Guid id, CancellationToken ct = default);
         Task<List<TaskDto>> ReorderTasksAsync(List<Guid> orderedIds, CancellationToken ct = default);
-        Task<List<MicroStep>> GetMicroStepsAsync(Guid taskId, CancellationToken ct = default);
-        Task<MicroStep> AddMicroStepAsync(Guid taskId, CreateMicroStepDto dto, CancellationToken ct = default);
-        Task<MicroStep> UpdateMicroStepAsync(Guid microStepId, UpdateMicroStepDto dto, CancellationToken ct = default);
     }
 }

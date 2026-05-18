@@ -9,11 +9,13 @@ namespace KeepCalm.Controllers
     public class TasksController : ControllerBase
     {
         private readonly ITaskService _taskService;
+        private readonly IMicroStepService _microStepService;
         private readonly ILogger<TasksController> _logger;
 
-        public TasksController(ITaskService taskService, ILogger<TasksController> logger)
+        public TasksController(ITaskService taskService, IMicroStepService microStepService, ILogger<TasksController> logger)
         {
             _taskService = taskService;
+            _microStepService = microStepService;
             _logger = logger;
         }
 
@@ -91,30 +93,6 @@ namespace KeepCalm.Controllers
 
             var reordered = await _taskService.ReorderTasksAsync(orderedIds, ct);
             return Ok(reordered);
-        }
-
-        [HttpGet("{id}/micro-steps")]
-        public async Task<IActionResult> GetMicroSteps(Guid id, CancellationToken ct = default)
-        {
-            var steps = await _taskService.GetMicroStepsAsync(id, ct);
-            return Ok(steps);
-        }
-
-        [HttpPost("{taskId}/micro-steps")]
-        public async Task<IActionResult> AddMicroStep(Guid taskId, [FromBody] CreateMicroStepDto dto, CancellationToken ct = default)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(new ErrorResponse { Error = "Validation failed", Details = GetValidationErrors() });
-
-            var step = await _taskService.AddMicroStepAsync(taskId, dto, ct);
-            return CreatedAtAction(nameof(GetMicroSteps), new { id = taskId }, step);
-        }
-
-        [HttpPatch("micro-steps/{microStepId}")]
-        public async Task<IActionResult> UpdateMicroStep(Guid microStepId, [FromBody] UpdateMicroStepDto dto, CancellationToken ct = default)
-        {
-            var step = await _taskService.UpdateMicroStepAsync(microStepId, dto, ct);
-            return Ok(step);
         }
 
         private string GetValidationErrors()

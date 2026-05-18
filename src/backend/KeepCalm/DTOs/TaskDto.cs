@@ -42,31 +42,6 @@ namespace KeepCalm.DTOs
         public List<MicroStepDto> MicroSteps { get; set; } = new();
     }
 
-    public class CreateMicroStepDto
-    {
-        public string Title { get; set; } = string.Empty;
-        public string? Description { get; set; }
-    }
-
-    public class UpdateMicroStepDto
-    {
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public bool? IsCompleted { get; set; }
-    }
-
-    public class MicroStepDto
-    {
-        public Guid Id { get; set; }
-        public Guid TaskId { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public bool IsCompleted { get; set; }
-        public int OrderIndex { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-    }
-
     public class StartFocusSessionDto
     {
         public int DurationMinutes { get; set; } = 25;

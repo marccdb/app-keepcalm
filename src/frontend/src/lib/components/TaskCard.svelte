@@ -20,9 +20,24 @@
 	);
 
 	const isChecked = $derived(completed);
+
+	function handleKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			onClick?.();
+		}
+	}
 </script>
 
-<div class={cardClass} onclick={onClick} style="padding: 1.25rem; cursor: {onClick ? 'pointer' : 'default'}; border-radius: var(--calm-radius);">
+<button
+	type="button"
+	class={cardClass}
+	onclick={onClick}
+	onkeydown={handleKeyDown}
+	tabindex="0"
+	aria-label={title}
+	style="padding: 1.25rem; cursor: {onClick ? 'pointer' : 'default'}; border-radius: var(--calm-radius); display: block; width: 100%; text-align: left; background: var(--calm-bg-tertiary); border: none; font-family: inherit;"
+>
 	<div style="display: flex; align-items: flex-start; gap: 1rem;">
 		<!-- Checkbox -->
 		<input
@@ -66,9 +81,18 @@
 			</div>
 		</div>
 	</div>
-</div>
+</button>
 
 <style>
+	.card-item {
+		background: var(--calm-bg-tertiary) !important;
+		color: var(--calm-text) !important;
+	}
+
+	.card-item h3 {
+		color: var(--calm-text) !important;
+	}
+
 	.card-item--completed {
 		opacity: 0.7;
 	}

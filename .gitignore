@@ -1,0 +1,38 @@
+# Build outputs
+**/bin/
+**/obj/
+**/build/
+**/.svelte-kit/
+
+# IDE
+.vs/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# Docker
+docker-compose.override.yml
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/

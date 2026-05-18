@@ -23,6 +23,7 @@ builder.Services.AddDbContext<MongoDbContext>(options =>
 
 // Services
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IMicroStepService, MicroStepService>();
 builder.Services.AddScoped<IFocusSessionService, FocusSessionService>();
 
 // CORS
@@ -37,7 +38,12 @@ builder.Services.AddCors(options =>
 });
 
 // Controllers + Swagger
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(null, false));
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
