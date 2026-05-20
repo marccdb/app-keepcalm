@@ -1,13 +1,5 @@
 <script lang="ts">
-	interface Props {
-		open: boolean;
-		title: string;
-		onClose: () => void;
-		children?: () => any;
-		footer?: () => any;
-	}
-
-	const { open, title, onClose, children = () => {}, footer = () => {} }: Props = $props();
+	let { open, title, onClose, children = () => {}, footer = () => {} } = $props();
 
 	$effect(() => {
 		if (open) {

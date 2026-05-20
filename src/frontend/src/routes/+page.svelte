@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import TaskCard from '$lib/components/TaskCard.svelte';
 	import { Modal } from '$lib/components/index.js';
 	import PriorityBadge from '$lib/components/PriorityBadge.svelte';
@@ -124,7 +125,7 @@
 						description={task.description}
 						priority={task.priority}
 						progress={task.progress}
-						onClick={() => (window.location.href = `/task/${task.id}`)}
+					onClick={() => goto(`/task/${task.id}`)}
 						onToggle={() => handleToggle(task.id)}
 					/>
 				{/each}
@@ -145,7 +146,7 @@
 						priority={task.priority}
 						progress={task.progress}
 						completed={true}
-						onClick={() => (window.location.href = `/task/${task.id}`)}
+				onClick={() => goto(`/task/${task.id}`)}
 						onToggle={() => handleToggle(task.id)}
 					/>
 				{/each}
@@ -228,3 +229,5 @@
 		</div>
 	</form>
 </Modal>
+
+

@@ -2,18 +2,7 @@
 	import PriorityBadge from './PriorityBadge.svelte';
 	import ProgressBar from './ProgressBar.svelte';
 
-	interface Props {
-		id: string;
-		title: string;
-		description: string;
-		priority: 'low' | 'medium' | 'high' | 'urgent';
-		progress: number;
-		completed?: boolean;
-		onClick?: () => void;
-		onToggle?: () => void;
-	}
-
-	const { id, title, description, priority, progress, completed = false, onClick, onToggle }: Props = $props();
+	let { id, title, description, priority = 'normal', progress = 0, completed = false, onClick, onToggle } = $props();
 
 	const cardClass = $derived(
 		`calm-card card-item${completed ? ' card-item--completed' : ''}`

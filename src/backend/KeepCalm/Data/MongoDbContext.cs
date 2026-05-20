@@ -5,7 +5,7 @@ using KeepCalm.Models.Entities;
 
 namespace KeepCalm.Data
 {
-    public class MongoDbContext : DbContext
+    public class MongoDbContext : DbContext, IMongoDbContext
     {
         public MongoDbContext(DbContextOptions<MongoDbContext> options) : base(options) { }
 

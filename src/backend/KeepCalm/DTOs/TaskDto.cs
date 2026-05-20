@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using KeepCalm.Models.Entities;
 
 namespace KeepCalm.DTOs
@@ -7,18 +8,31 @@ namespace KeepCalm.DTOs
 
     public class CreateTaskDto
     {
+        [Required]
+        [StringLength(200, MinimumLength = 1)]
         public string Title { get; set; } = string.Empty;
+
+        [StringLength(2000)]
         public string? Description { get; set; }
+
         public TaskPriority Priority { get; set; } = TaskPriority.Normal;
+
+        [StringLength(100)]
         public string? Folder { get; set; }
     }
 
     public class UpdateTaskDto
     {
+        [StringLength(200, MinimumLength = 1)]
         public string Title { get; set; } = string.Empty;
+
+        [StringLength(2000)]
         public string? Description { get; set; }
+
         public TaskPriority? Priority { get; set; }
+
         public TStatus? Status { get; set; }
+
         public List<string>? Tags { get; set; }
     }
 
@@ -44,8 +58,11 @@ namespace KeepCalm.DTOs
 
     public class StartFocusSessionDto
     {
+        [Range(1, 120)]
         public int DurationMinutes { get; set; } = 25;
+
         public SessionType Type { get; set; } = SessionType.Focus;
+
         public Guid? TaskId { get; set; }
     }
 

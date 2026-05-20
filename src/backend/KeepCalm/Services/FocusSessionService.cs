@@ -8,10 +8,10 @@ namespace KeepCalm.Services
 {
     public class FocusSessionService : IFocusSessionService
     {
-        private readonly MongoDbContext _context;
+        private readonly IMongoDbContext _context;
         private readonly ILogger<FocusSessionService> _logger;
 
-        public FocusSessionService(MongoDbContext context, ILogger<FocusSessionService> logger)
+        public FocusSessionService(IMongoDbContext context, ILogger<FocusSessionService> logger)
         {
             _context = context;
             _logger = logger;

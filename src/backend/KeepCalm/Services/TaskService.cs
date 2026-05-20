@@ -8,10 +8,10 @@ namespace KeepCalm.Services
 {
     public class TaskService : ITaskService
     {
-        private readonly MongoDbContext _context;
+        private readonly IMongoDbContext _context;
         private readonly ILogger<TaskService> _logger;
 
-        public TaskService(MongoDbContext context, ILogger<TaskService> logger)
+        public TaskService(IMongoDbContext context, ILogger<TaskService> logger)
         {
             _context = context;
             _logger = logger;
@@ -167,7 +167,7 @@ namespace KeepCalm.Services
 
             await _context.SaveChangesAsync(ct);
 
-            return tasks.Select(MapToDto).ToList();
+            return tasks.OrderBy(t => t.OrderIndex).Select(MapToDto).ToList();
         }
 
         private TaskDto MapToDto(TaskItem task)

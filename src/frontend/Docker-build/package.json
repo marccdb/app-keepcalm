@@ -21,17 +21,17 @@
 		"@prettier/plugin-xml": "^3.4.2",
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/adapter-node": "^5.5.1",
-		"@sveltejs/kit": "2.60.1",
-		"@sveltejs/vite-plugin-svelte": "7.1.2",
+		"@sveltejs/kit": "^2.57.0",
+		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@testing-library/jest-dom": "^6.9.1",
-		"@testing-library/svelte": "5.3.1",
+		"@testing-library/svelte": "^5.3.1",
 		"eslint": "^10.3.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-prettier": "^5.5.5",
 		"jsdom": "^29.1.1",
 		"prettier": "^3.8.3",
-		"svelte": "5.55.8",
-		"svelte-check": "4.4.8",
+		"svelte": "^5.55.2",
+		"svelte-check": "^4.4.6",
 		"svelte-eslint-parser": "^1.6.1",
 		"typescript": "^6.0.2",
 		"typescript-eslint": "^8.59.3",
@@ -45,9 +45,7 @@
 	"vitest": {
 		"globals": true,
 		"environment": "jsdom",
-		"setupFiles": [
-			"tests/setup.ts"
-		],
+		"setupFiles": ["tests/setup.ts"],
 		"reporters": "default"
 	}
 }

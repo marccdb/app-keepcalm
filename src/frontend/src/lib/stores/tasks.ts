@@ -24,10 +24,10 @@ function mapBackendTask(task: BackendTask): Task {
 		id: task.id,
 		title: task.title,
 		description: task.description,
-		done: task.status === 'completed',
-		priority: task.priority,
+		done: task.status === 'Completed',
+		priority: task.priority.toLowerCase() as 'urgent' | 'important' | 'normal' | 'low',
 		progress: task.progress,
-		completed: task.status === 'completed',
+		completed: task.status === 'Completed',
 		createdAt: task.createdAt,
 		microSteps: task.microSteps.map((ms: BackendMicroStep) => ({
 			id: ms.id,
@@ -87,7 +87,7 @@ export async function updateTask(id: string, updates: Partial<Omit<Task, 'id'>>)
 		if (updates.title !== undefined) backendUpdates.title = updates.title;
 		if (updates.description !== undefined) backendUpdates.description = updates.description;
 		if (updates.priority !== undefined) backendUpdates.priority = updates.priority;
-		if (updates.done !== undefined) backendUpdates.status = updates.done ? 'completed' : 'pending';
+		if (updates.done !== undefined) backendUpdates.status = updates.done ? 'Completed' : 'Pending';
 
 		const backendTask = await tasksApi.update(id, backendUpdates);
 		const mappedTask = mapBackendTask(backendTask);
@@ -119,7 +119,7 @@ export async function toggleTask(id: string) {
 	const newDone = !currentTask.done;
 	try {
 		const backendTask = await tasksApi.update(id, {
-			status: newDone ? 'completed' : 'pending'
+			status: newDone ? 'Completed' : 'Pending'
 		});
 		const mappedTask = mapBackendTask(backendTask);
 

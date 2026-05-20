@@ -8,10 +8,10 @@ namespace KeepCalm.Services
 {
     public class MicroStepService : IMicroStepService
     {
-        private readonly MongoDbContext _context;
+        private readonly IMongoDbContext _context;
         private readonly ILogger<MicroStepService> _logger;
 
-        public MicroStepService(MongoDbContext context, ILogger<MicroStepService> logger)
+        public MicroStepService(IMongoDbContext context, ILogger<MicroStepService> logger)
         {
             _context = context;
             _logger = logger;
@@ -53,7 +53,7 @@ namespace KeepCalm.Services
                 OrderIndex = maxOrder + 1
             };
 
-            task!.MicroSteps.Add(microStep);
+            _context.MicroSteps.Add(microStep);
             await _context.SaveChangesAsync(ct);
 
             _logger.LogInformation("MicroStep created: {MicroStepId} for Task: {TaskId}", microStep.Id, taskId);
@@ -135,7 +135,7 @@ namespace KeepCalm.Services
 
             _logger.LogInformation("MicroSteps reordered for Task: {TaskId}", taskId);
 
-            return microSteps.Select(MapToDto).ToList();
+            return microSteps.OrderBy(ms => ms.OrderIndex).Select(MapToDto).ToList();
         }
 
         public async Task<MicroStepDto?> GetMicroStepByIdAsync(Guid microStepId, CancellationToken ct = default)

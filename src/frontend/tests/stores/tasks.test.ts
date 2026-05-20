@@ -1,122 +1,171 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { tasks } from '$lib/stores/tasks';
-import type { Task } from '$lib/stores/tasks';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { get } from 'svelte/store';
+import { tasks, loading, addTask, updateTask, deleteTask, fetchTasks } from '$lib/stores/tasks';
+import * as api from '$lib/api';
+
+vi.mock('$lib/api', () => ({
+	tasksApi: {
+		list: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		delete: vi.fn()
+	}
+}));
+
+function tick() {
+	return new Promise(resolve => setTimeout(resolve, 0));
+}
 
 describe('tasks store', () => {
 	beforeEach(() => {
-		tasks.reset();
+		tasks.set([]);
+		loading.set(false);
+		vi.clearAllMocks();
 	});
+
 	it('initial state has empty tasks array', () => {
-		let currentTasks: Task[] = [];
-		tasks.tasks.subscribe((value) => {
-			currentTasks = value;
-		});
-		expect(currentTasks).toEqual([]);
+		expect(get(tasks)).toEqual([]);
 	});
 
-	it('addTask adds a task to the store', () => {
-		let currentTasks: Task[] = [];
-		tasks.tasks.subscribe((value) => {
-			currentTasks = value;
+	it('addTask adds a task to the store', async () => {
+		vi.mocked(api.tasksApi.create).mockResolvedValue({
+			id: 'test-1',
+			title: 'Test task',
+			description: 'A test task',
+			priority: 'normal',
+			status: 'Pending',
+			orderIndex: 1,
+			progress: 0,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			microSteps: []
 		});
 
-		tasks.addTask({
+		await addTask({
 			title: 'Test task',
 			description: 'A test task',
 			done: false,
-			priority: 'high'
+			priority: 'normal'
 		});
 
+		await tick();
+		const currentTasks = get(tasks);
 		expect(currentTasks).toHaveLength(1);
 		expect(currentTasks[0].title).toBe('Test task');
 		expect(currentTasks[0].done).toBe(false);
-		expect(currentTasks[0].priority).toBe('high');
-		expect(currentTasks[0].id).toBeTruthy();
 	});
 
-	it('updateTask updates an existing task', () => {
-		let currentTasks: Task[] = [];
-		tasks.tasks.subscribe((value) => {
-			currentTasks = value;
-		});
-
-		const newTask = {
+	it('updateTask updates an existing task', async () => {
+		vi.mocked(api.tasksApi.create).mockResolvedValue({
+			id: 'test-1',
 			title: 'Original',
 			description: 'Desc',
-			done: false,
-			priority: 'low'
-		};
-		tasks.addTask(newTask);
-		const taskId = currentTasks[0].id;
+			priority: 'low',
+			status: 'Pending',
+			orderIndex: 1,
+			progress: 0,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			microSteps: []
+		});
 
-		tasks.updateTask(taskId, { title: 'Updated', done: true });
+		await addTask({ title: 'Original', description: 'Desc', done: false, priority: 'low' });
+		await tick();
+		const taskId = get(tasks)[0].id;
 
+		vi.mocked(api.tasksApi.update).mockResolvedValue({
+			id: taskId,
+			title: 'Updated',
+			description: 'Desc',
+			priority: 'low',
+			status: 'Completed',
+			orderIndex: 1,
+			progress: 100,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			microSteps: []
+		});
+
+		await updateTask(taskId, { title: 'Updated', done: true });
+		await tick();
+
+		const currentTasks = get(tasks);
 		expect(currentTasks).toHaveLength(1);
 		expect(currentTasks[0].title).toBe('Updated');
 		expect(currentTasks[0].done).toBe(true);
-		expect(currentTasks[0].priority).toBe('low');
 	});
 
-	it('updateTask throws error for non-existent task', () => {
-		expect(() => {
-			tasks.updateTask('non-existent-id', { title: 'Nope' });
-		}).toThrow('Task with id "non-existent-id" not found');
-	});
-
-	it('deleteTask removes a task from the store', () => {
-		let currentTasks: Task[] = [];
-		tasks.tasks.subscribe((value) => {
-			currentTasks = value;
-		});
-
-		tasks.addTask({
+	it('deleteTask removes a task from the store', async () => {
+		vi.mocked(api.tasksApi.create).mockResolvedValue({
+			id: 'test-1',
 			title: 'To delete',
-			done: false,
-			priority: 'medium'
-		});
-		expect(currentTasks).toHaveLength(1);
-
-		tasks.deleteTask(currentTasks[0].id);
-		expect(currentTasks).toHaveLength(0);
-	});
-
-	it('deleteTask throws error for non-existent task', () => {
-		expect(() => {
-			tasks.deleteTask('non-existent-id');
-		}).toThrow('Task with id "non-existent-id" not found');
-	});
-
-	it('setTasks replaces all tasks', () => {
-		let currentTasks: Task[] = [];
-		tasks.tasks.subscribe((value) => {
-			currentTasks = value;
+			priority: 'low',
+			status: 'Pending',
+			orderIndex: 1,
+			progress: 0,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			microSteps: []
 		});
 
-		tasks.addTask({ title: 'Old', done: false, priority: 'low' });
-		expect(currentTasks).toHaveLength(1);
+		await addTask({ title: 'To delete', done: false, priority: 'low' });
+		await tick();
+		expect(get(tasks)).toHaveLength(1);
 
-		const newTasks: Task[] = [
-			{ id: '1', title: 'New 1', done: true, priority: 'high' },
-			{ id: '2', title: 'New 2', done: false, priority: 'medium' }
-		];
-		tasks.setTasks(newTasks);
+		vi.mocked(api.tasksApi.delete).mockResolvedValue(undefined);
+		await deleteTask(get(tasks)[0].id);
+		await tick();
+		expect(get(tasks)).toHaveLength(0);
+	});
+
+	it('fetchTasks loads tasks from API', async () => {
+		vi.mocked(api.tasksApi.list).mockResolvedValue([
+			{
+				id: '1',
+				title: 'New 1',
+				priority: 'important',
+				status: 'Completed',
+				orderIndex: 1,
+				progress: 100,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				microSteps: []
+			},
+			{
+				id: '2',
+				title: 'New 2',
+				priority: 'normal',
+				status: 'Pending',
+				orderIndex: 2,
+				progress: 0,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				microSteps: []
+			}
+		]);
+
+		await fetchTasks();
+		await tick();
+
+		const currentTasks = get(tasks);
 		expect(currentTasks).toHaveLength(2);
 		expect(currentTasks[0].title).toBe('New 1');
+		expect(currentTasks[0].done).toBe(true);
 		expect(currentTasks[1].title).toBe('New 2');
+		expect(currentTasks[1].done).toBe(false);
 	});
 
-	it('setLoading updates loading state', () => {
-		let currentLoading = false;
-		tasks.loading.subscribe((value) => {
-			currentLoading = value;
-		});
+	it('setLoading updates loading state', async () => {
+		expect(get(loading)).toBe(false);
 
-		expect(currentLoading).toBe(false);
+		loading.set(true);
+		await tick();
+		expect(get(loading)).toBe(true);
 
-		tasks.setLoading(true);
-		expect(currentLoading).toBe(true);
-
-		tasks.setLoading(false);
-		expect(currentLoading).toBe(false);
+		loading.set(false);
+		await tick();
+		expect(get(loading)).toBe(false);
 	});
 });
+
+

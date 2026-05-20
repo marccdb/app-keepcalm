@@ -1,19 +1,5 @@
 <script lang="ts">
-	interface Props {
-		value: number;
-		max?: number;
-		variant?: 'primary' | 'success' | 'warning';
-		showLabel?: boolean;
-		height?: number;
-	}
-
-	const {
-		value,
-		max = 100,
-		variant = 'primary',
-		showLabel = true,
-		height = 8
-	}: Props = $props();
+	let { value, max = 100, variant = 'primary' as const, showLabel = true, height = 8 } = $props();
 
 	const percentage = $derived(Math.min(100, Math.max(0, (value / max) * 100)));
 

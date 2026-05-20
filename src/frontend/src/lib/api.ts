@@ -4,8 +4,8 @@ export interface BackendTask {
 	id: string;
 	title: string;
 	description?: string;
-	priority: 'urgent' | 'important' | 'normal' | 'low';
-	status: 'pending' | 'inprogress' | 'completed' | 'cancelled';
+	priority: 'Urgent' | 'Important' | 'Normal' | 'Low';
+	status: 'Pending' | 'InProgress' | 'Completed' | 'Cancelled';
 	orderIndex: number;
 	tags: string[];
 	progress: number;

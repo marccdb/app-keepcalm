@@ -1,10 +1,5 @@
 <script lang="ts">
-	interface Props {
-		priority: 'low' | 'medium' | 'high' | 'urgent';
-		label?: string;
-	}
-
-	const { priority, label }: Props = $props();
+	let { priority = 'normal', label = '' } = $props();
 
 	const badgeClass = $derived(
 		{
@@ -15,7 +10,7 @@
 		}[priority]
 	);
 
-	const text = $derived(label ?? priority);
+	const text = $derived(label || priority);
 </script>
 
 <span class={badgeClass}>{text}</span>

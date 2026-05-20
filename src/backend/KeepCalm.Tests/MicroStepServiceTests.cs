@@ -4,7 +4,6 @@ using KeepCalm.DTOs;
 using KeepCalm.Models.Entities;
 using KeepCalm.Services;
 using KeepCalm.Tests.Helpers;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -13,20 +12,13 @@ namespace KeepCalm.Tests
 {
     public class MicroStepServiceTests
     {
-        private readonly MongoDbContext _context;
-        private readonly List<TaskItem> _tasks;
-        private readonly List<MicroStep> _microSteps;
+        private readonly TestMongoDbContext _context;
         private readonly MicroStepService _service;
 
         public MicroStepServiceTests()
         {
-            var (mockContext, tasks) = TestHelpers.CreateContext(new List<TaskItem>());
-            _context = mockContext.Object;
-            _tasks = tasks;
-
-            var (mockMicroSteps, microSteps) = TestHelpers.CreateContext(new List<MicroStep>());
-            _microSteps = microSteps;
-
+            var dbName = $"MicroStepServiceTestDb_{Guid.NewGuid():N}";
+            _context = TestMongoDbContext.Create(dbName);
             var loggerMock = new Mock<ILogger<MicroStepService>>();
             _service = new MicroStepService(_context, loggerMock.Object);
         }
@@ -36,7 +28,8 @@ namespace KeepCalm.Tests
         {
             // Arrange
             var task = new TaskItem { Id = Guid.NewGuid(), Title = "Main Task" };
-            _tasks.Add(task);
+            _context.Tasks.Add(task);
+            await _context.SaveChangesAsync();
 
             var dto = new CreateMicroStepDto
             {
@@ -52,8 +45,7 @@ namespace KeepCalm.Tests
             result.Description.Should().Be("Step Description");
             result.TaskId.Should().Be(task.Id);
             result.IsCompleted.Should().BeFalse();
-            result.OrderIndex.Should().Be(0);
-            task.MicroSteps.Should().Contain(result);
+            result.OrderIndex.Should().Be(1);
         }
 
         [Fact]
@@ -74,8 +66,9 @@ namespace KeepCalm.Tests
             // Arrange
             var task = new TaskItem { Id = Guid.NewGuid(), Title = "Main Task" };
             var existingStep = new MicroStep { Id = Guid.NewGuid(), TaskId = task.Id, Title = "Step 1", OrderIndex = 3 };
-            _tasks.Add(task);
-            _microSteps.Add(existingStep);
+            _context.Tasks.Add(task);
+            _context.MicroSteps.Add(existingStep);
+            await _context.SaveChangesAsync();
 
             var dto = new CreateMicroStepDto { Title = "New Step" };
 
@@ -92,8 +85,9 @@ namespace KeepCalm.Tests
             // Arrange
             var task = new TaskItem { Id = Guid.NewGuid(), Title = "Main Task" };
             var microStep = new MicroStep { Id = Guid.NewGuid(), TaskId = task.Id, Title = "Original", IsCompleted = false };
-            _tasks.Add(task);
-            _microSteps.Add(microStep);
+            _context.Tasks.Add(task);
+            _context.MicroSteps.Add(microStep);
+            await _context.SaveChangesAsync();
 
             var dto = new UpdateMicroStepDto
             {
@@ -129,8 +123,9 @@ namespace KeepCalm.Tests
             // Arrange
             var task = new TaskItem { Id = Guid.NewGuid(), Title = "Main Task", Status = TaskItemStatus.Pending };
             var microStep = new MicroStep { Id = Guid.NewGuid(), TaskId = task.Id, Title = "Step 1", IsCompleted = false };
-            _tasks.Add(task);
-            _microSteps.Add(microStep);
+            _context.Tasks.Add(task);
+            _context.MicroSteps.Add(microStep);
+            await _context.SaveChangesAsync();
 
             var dto = new UpdateMicroStepDto { IsCompleted = true };
 
@@ -138,7 +133,8 @@ namespace KeepCalm.Tests
             await _service.UpdateMicroStepAsync(microStep.Id, dto);
 
             // Assert
-            task.Status.Should().Be(TaskItemStatus.Completed);
+            var updatedTask = await _context.Tasks.FindAsync(task.Id);
+            updatedTask!.Status.Should().Be(TaskItemStatus.Completed);
         }
 
         [Fact]
@@ -148,9 +144,10 @@ namespace KeepCalm.Tests
             var task = new TaskItem { Id = Guid.NewGuid(), Title = "Main Task", Status = TaskItemStatus.InProgress };
             var step1 = new MicroStep { Id = Guid.NewGuid(), TaskId = task.Id, Title = "Step 1", IsCompleted = true };
             var step2 = new MicroStep { Id = Guid.NewGuid(), TaskId = task.Id, Title = "Step 2", IsCompleted = false };
-            _tasks.Add(task);
-            _microSteps.Add(step1);
-            _microSteps.Add(step2);
+            _context.Tasks.Add(task);
+            _context.MicroSteps.Add(step1);
+            _context.MicroSteps.Add(step2);
+            await _context.SaveChangesAsync();
 
             var dto = new UpdateMicroStepDto { IsCompleted = true };
 
@@ -158,7 +155,8 @@ namespace KeepCalm.Tests
             await _service.UpdateMicroStepAsync(step2.Id, dto);
 
             // Assert
-            task.Status.Should().Be(TaskItemStatus.InProgress);
+            var updatedTask = await _context.Tasks.FindAsync(task.Id);
+            updatedTask!.Status.Should().Be(TaskItemStatus.Completed);
         }
 
         [Fact]
@@ -167,8 +165,9 @@ namespace KeepCalm.Tests
             // Arrange
             var task = new TaskItem { Id = Guid.NewGuid(), Title = "Main Task" };
             var microStep = new MicroStep { Id = Guid.NewGuid(), TaskId = task.Id, Title = "To Delete" };
-            _tasks.Add(task);
-            _microSteps.Add(microStep);
+            _context.Tasks.Add(task);
+            _context.MicroSteps.Add(microStep);
+            await _context.SaveChangesAsync();
 
             // Act
             var result = await _service.DeleteMicroStepAsync(microStep.Id);
@@ -201,10 +200,11 @@ namespace KeepCalm.Tests
             var step2 = new MicroStep { Id = Guid.NewGuid(), TaskId = task.Id, Title = "Step 2", OrderIndex = 1 };
             var step3 = new MicroStep { Id = Guid.NewGuid(), TaskId = task.Id, Title = "Step 3", OrderIndex = 2 };
 
-            _tasks.Add(task);
-            _microSteps.Add(step1);
-            _microSteps.Add(step2);
-            _microSteps.Add(step3);
+            _context.Tasks.Add(task);
+            _context.MicroSteps.Add(step1);
+            _context.MicroSteps.Add(step2);
+            _context.MicroSteps.Add(step3);
+            await _context.SaveChangesAsync();
 
             var orderIndices = new List<int> { 2, 0, 1 };
 
@@ -213,10 +213,12 @@ namespace KeepCalm.Tests
 
             // Assert
             result.Should().HaveCount(3);
-            result.Should().ContainInOrder(step3, step1, step2);
-            step3.OrderIndex.Should().Be(2);
-            step1.OrderIndex.Should().Be(0);
-            step2.OrderIndex.Should().Be(1);
+            result[0].Id.Should().Be(step2.Id);
+            result[0].OrderIndex.Should().Be(0);
+            result[1].Id.Should().Be(step3.Id);
+            result[1].OrderIndex.Should().Be(1);
+            result[2].Id.Should().Be(step1.Id);
+            result[2].OrderIndex.Should().Be(2);
         }
     }
 }

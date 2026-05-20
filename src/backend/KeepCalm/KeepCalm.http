@@ -1,6 +1,22 @@
 @KeepCalm_HostAddress = http://localhost:5292
 
-GET {{KeepCalm_HostAddress}}/weatherforecast/
+GET {{KeepCalm_HostAddress}}/api/tasks
 Accept: application/json
+
+###
+
+GET {{KeepCalm_HostAddress}}/api/tasks/00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+###
+
+POST {{KeepCalm_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Test Task",
+  "description": "Test Description",
+  "priority": "Normal"
+}
 
 ###

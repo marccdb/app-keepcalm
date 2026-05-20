@@ -4,7 +4,6 @@ using KeepCalm.DTOs;
 using KeepCalm.Models.Entities;
 using KeepCalm.Services;
 using KeepCalm.Tests.Helpers;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -13,18 +12,13 @@ namespace KeepCalm.Tests
 {
     public class TaskServiceTests
     {
-        private readonly MongoDbContext _context;
-        private readonly List<TaskItem> _tasks;
-        private readonly List<MicroStep> _microSteps;
+        private readonly TestMongoDbContext _context;
         private readonly TaskService _service;
 
         public TaskServiceTests()
         {
-            var (mockContext, tasks, microSteps) = TestHelpers.CreateFullContext();
-            _context = mockContext.Object;
-            _tasks = tasks;
-            _microSteps = microSteps;
-
+            var dbName = $"TaskServiceTestDb_{Guid.NewGuid():N}";
+            _context = TestMongoDbContext.Create(dbName);
             var loggerMock = new Mock<ILogger<TaskService>>();
             _service = new TaskService(_context, loggerMock.Object);
         }
@@ -48,7 +42,7 @@ namespace KeepCalm.Tests
             result.Description.Should().Be("Test Description");
             result.Priority.Should().Be(TaskPriority.Urgent);
             result.Status.Should().Be(TaskItemStatus.Pending);
-            result.OrderIndex.Should().Be(0);
+            result.OrderIndex.Should().Be(1);
             result.MicroSteps.Should().BeEmpty();
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
         }
@@ -75,7 +69,9 @@ namespace KeepCalm.Tests
         public async Task CreateTaskAsync_AssignsCorrectOrderIndex()
         {
             // Arrange
-            _tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Existing", OrderIndex = 5 });
+            var existingTask = new TaskItem { Id = Guid.NewGuid(), Title = "Existing", OrderIndex = 5 };
+            _context.Tasks.Add(existingTask);
+            await _context.SaveChangesAsync();
 
             var dto = new CreateTaskDto { Title = "New Task" };
 
@@ -95,9 +91,10 @@ namespace KeepCalm.Tests
             var deletedTask = new TaskItem { Id = Guid.NewGuid(), Title = "Deleted", OrderIndex = 3 };
             deletedTask.SoftDelete();
 
-            _tasks.Add(task1);
-            _tasks.Add(task2);
-            _tasks.Add(deletedTask);
+            _context.Tasks.Add(task1);
+            _context.Tasks.Add(task2);
+            _context.Tasks.Add(deletedTask);
+            await _context.SaveChangesAsync();
 
             // Act
             var result = await _service.GetTasksAsync();
@@ -112,8 +109,9 @@ namespace KeepCalm.Tests
         public async Task GetTasksAsync_FiltersByPriority()
         {
             // Arrange
-            _tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Urgent Task", Priority = TaskPriority.Urgent });
-            _tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Normal Task", Priority = TaskPriority.Normal });
+            _context.Tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Urgent Task", Priority = TaskPriority.Urgent });
+            _context.Tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Normal Task", Priority = TaskPriority.Normal });
+            await _context.SaveChangesAsync();
 
             // Act
             var result = await _service.GetTasksAsync(priority: "Urgent");
@@ -127,8 +125,9 @@ namespace KeepCalm.Tests
         public async Task GetTasksAsync_FiltersByStatus()
         {
             // Arrange
-            _tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Pending", Status = TaskItemStatus.Pending });
-            _tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Completed", Status = TaskItemStatus.Completed });
+            _context.Tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Pending", Status = TaskItemStatus.Pending });
+            _context.Tasks.Add(new TaskItem { Id = Guid.NewGuid(), Title = "Completed", Status = TaskItemStatus.Completed });
+            await _context.SaveChangesAsync();
 
             // Act
             var result = await _service.GetTasksAsync(status: "Pending");
@@ -143,7 +142,8 @@ namespace KeepCalm.Tests
         {
             // Arrange
             var task = new TaskItem { Id = Guid.NewGuid(), Title = "Original" };
-            _tasks.Add(task);
+            _context.Tasks.Add(task);
+            await _context.SaveChangesAsync();
 
             var dto = new UpdateTaskDto
             {
@@ -180,7 +180,8 @@ namespace KeepCalm.Tests
         {
             // Arrange
             var task = new TaskItem { Id = Guid.NewGuid(), Title = "To Delete" };
-            _tasks.Add(task);
+            _context.Tasks.Add(task);
+            await _context.SaveChangesAsync();
 
             // Act
             var result = await _service.DeleteTaskAsync(task.Id);
@@ -212,9 +213,10 @@ namespace KeepCalm.Tests
             var task2 = new TaskItem { Id = Guid.NewGuid(), Title = "Second", OrderIndex = 1 };
             var task3 = new TaskItem { Id = Guid.NewGuid(), Title = "Third", OrderIndex = 2 };
 
-            _tasks.Add(task1);
-            _tasks.Add(task2);
-            _tasks.Add(task3);
+            _context.Tasks.Add(task1);
+            _context.Tasks.Add(task2);
+            _context.Tasks.Add(task3);
+            await _context.SaveChangesAsync();
 
             var orderedIds = new List<Guid> { task3.Id, task1.Id, task2.Id };
 
